@@ -1,6 +1,5 @@
 package jm.task.core.jdbc.dao;
 
-import jm.task.core.jdbc.Main;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 
@@ -9,14 +8,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
+
+    final static Connection connection = Util.getConnection();
     public UserDaoJDBCImpl() {
 
     }
 
     public void createUsersTable() {
-        try (Statement statement = Util.getConnection().createStatement()) {
-            String sql = "CREATE TABLE USERS" + "(id integer not null auto_increment unique key, "
-                    + "name varchar (30) not null," + "lastName varchar(30) not null," + "age tinyint not null)";
+        try (Statement statement = connection.createStatement()) {
+            String sql = "CREATE TABLE USERS" + "(id INTEGER NOT NULL AUTO_INCREMENT UNIQUE KEY, "
+                    + "name VARCHAR (30) NOT NULL," + "lastName VARCHAR(30) NOT NULL," + "age TINYINT NOT NULL )";
             statement.executeUpdate(sql);
             System.out.println("Таблица создана");
         } catch (SQLSyntaxErrorException e) {
@@ -27,8 +28,8 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void dropUsersTable() {
-        try (Statement statement = Util.getConnection().createStatement()) {
-            String sql = "drop table USERS";
+        try (Statement statement = connection.createStatement()) {
+            String sql = "DROP TABLE users";
             statement.executeUpdate(sql);
             System.out.println("Таблица удалена");
         } catch (SQLSyntaxErrorException e) {
@@ -39,21 +40,21 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void saveUser(String name, String lastName, byte age) {
-        String sql = "insert into USERS (name, lastName, age) values (?, ?, ?)";
-        try (PreparedStatement preparedStatement = Util.getConnection().prepareStatement(sql))  {
+        String sql = "INSERT INTO users (name, lastName, age) VALUES (?, ?, ?)";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql))  {
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, lastName);
             preparedStatement.setByte(3, age);
             preparedStatement.executeUpdate();
             System.out.printf("Пользователь с именем %s добавлен в базу данных \n", name);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Exception " + e.getMessage());
         }
     }
 
     public void removeUserById(long id) {
-        String sql = "delete from users where id = ?";
-        try (PreparedStatement preparedStatement = Util.getConnection().prepareStatement(sql)) {
+        String sql = "DELETE FROM users WHERE id = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
@@ -64,8 +65,8 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public List<User> getAllUsers() {
         List<User> userList = new ArrayList<>();
-        String sql = "SELECT id, name, lastName, age from users";
-        try (Statement statement = Util.getConnection().createStatement()) {
+        String sql = "SELECT id, name, lastName, age FROM users";
+        try (Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery(sql);
             while (rs.next()) {
                 User user = new User();
@@ -83,11 +84,11 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void cleanUsersTable() {
-        String sql = "delete from users";
-        try (Statement statement = Util.getConnection().createStatement()) {
+        String sql = "DELETE FROM users";
+        try (Statement statement = connection.createStatement()) {
             statement.execute(sql);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Exception: " + e.getMessage());
         }
     }
 }

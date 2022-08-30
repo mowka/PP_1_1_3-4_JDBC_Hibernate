@@ -48,12 +48,8 @@ public class UserDaoHibernateImpl implements UserDao {
     public void saveUser(String name, String lastName, byte age) {
         try (Session session = sessionFactory.openSession()){
             Transaction transaction = session.beginTransaction();
-            String sql = "INSERT INTO user (name, lastName, age) VALUES (?, ?, ?)";
-            Query query = session.createSQLQuery(sql).addEntity(User.class);
-            query.setParameter(1, name);
-            query.setParameter(2, lastName);
-            query.setParameter(3, age);
-            query.executeUpdate();
+            User userToSave = new User(name, lastName, age);
+            session.save(userToSave);
             transaction.commit();
             System.out.printf("Пользователь с именем %s добавлен в базу данных \n", name);
         }
@@ -63,10 +59,8 @@ public class UserDaoHibernateImpl implements UserDao {
     public void removeUserById(long id) {
         try (Session session = sessionFactory.openSession()){
             Transaction transaction = session.beginTransaction();
-            String sql = "DELETE FROM user WHERE id = ?";
-            Query query = session.createSQLQuery(sql).addEntity(User.class);
-            query.setParameter(1, id);
-            query.executeUpdate();
+            User userToDelete = session.get(User.class, id);
+            session.delete(userToDelete);
             transaction.commit();
             System.out.println("Пользователь удалён");
         }
@@ -74,24 +68,20 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public List<User> getAllUsers() {
-        List<User> usersList= new ArrayList<>();
+        List<User> userList = new ArrayList<>();
         try (Session session = sessionFactory.openSession()){
             Transaction transaction = session.beginTransaction();
-            String sql = "SELECT * FROM user";
-            Query query = session.createSQLQuery(sql).addEntity(User.class);
-            usersList = query.getResultList();
+            userList  = session.createQuery("From User ").getResultList();
             transaction.commit();
         }
-        return usersList;
+        return userList;
     }
 
     @Override
     public void cleanUsersTable() {
         try (Session session = sessionFactory.openSession()){
             Transaction transaction = session.beginTransaction();
-            String sql = "DELETE FROM user";
-            Query query = session.createSQLQuery(sql).addEntity(User.class);
-            query.executeUpdate();
+            session.createQuery("delete User ").executeUpdate();
             transaction.commit();
             System.out.println("Таблица очищена");
         }
